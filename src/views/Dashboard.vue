@@ -7,7 +7,7 @@
                 อุปกรณ์ในระบบจำนวน {{AllDevice}} เครื่อง
             </div>
             <div class="text-center alert alert-success  ms-2 w-50" role="alert">
-                อุปกรณ์ออนไลน์จำนวน {{OnlineDevice}} เครื่อง
+                อุปกรณ์ออนไลน์จำนวน {{OnlineDevice.length}} เครื่อง
             </div>
         </div>
         <div class="card w-100">
@@ -20,7 +20,7 @@
                     <input type="number" min="1" placeholder="หมายเลขคิว" class="disabled input-rounded d-inline form-control text-center" v-model="Device[SelectDevice]" readonly>
                     <button class="btn btn-primary ms-2 w-25 btn-rounded" :class="(SelectDevice >= Device.length-1)?'disabled':''" @click="SelectDevice++"><i class="fas fa-plus"></i></button>
                 </div>
-                 <button class="btn btn-success mt-2  w-100" @click="sendqueue">เรียกคิว</button>
+                 <button :class="(OnlineDevice.includes(Number(SelectDevice)+1))?'':'disabled'" class="btn btn-success mt-2  w-100" @click="sendqueue">เรียกคิว</button>
             </div>
         </div>
             </div>
@@ -33,36 +33,41 @@
                 <div class="d-flex justify-content-center">
                     <div class="w-100">
                         <label for="" class="form-label">สถานะการเรียกคิว</label>
-                        <div v-if="SelectDevice == -1" class="alert alert-secondary">ไม่มีสถานะการเรียกคิว</div>
-                        <div v-else-if="SelectDevice != -1" class="alert alert-info">เรียกคิวที่ {{Device[SelectDevice]}}</div>
-                        <!-- <div v-else-if="Device != ''" class="alert alert-success">คิวที่ {{Device[SelectDevice]}} ตอบรับ</div> -->
+                        <div v-if="queuestatus == 0" class="alert alert-secondary">ไม่มีสถานะการเรียกคิว</div>
+                        <div v-else-if="queuestatus == 1" class="alert alert-info">เรียกคิวที่ {{Device[SelectDevice]}}</div>
+                        <div v-else-if="queuestatus == 2" class="alert alert-success">คิวที่ {{queue_h}} ตอบรับ</div>
                     </div>
                 </div>
             </div>
         </div>
      </div>
+
   </div>
 </template>
 
 <script>
 import Navbar from '@/components/Navbar.vue';
-import {Auth, onAuthStateChanged,set,database,ref,onValue} from '../firebase'
+import {Auth, onAuthStateChanged,set,database,ref,onValue,child} from '../firebase'
 export default {
     name:"Dashboard",
     data() {
         return {
             user:null,
-            SelectDevice:-1,
+            // SelectQueue:this.Device[this.SelectDrive],
+            queuestatus:0,
+            queue_h:0,
+            SelectDevice:0,
             Device:[],
             AllDevice:0,
-            OnlineDevice:5,
-            NDoC: []
+            OnlineDevice:[],
+            NDoC: [],
+            DoC:0,
         }
     },
     components:{
         Navbar
     },
-    created(){
+    mounted(){
         onAuthStateChanged(Auth,user =>{
             if(user){
                 this.user = user;
@@ -73,26 +78,69 @@ export default {
             const keys = Object.keys(snapshot.val());
             this.AllDevice = keys.length;
             for(let i = 0; i < keys.length;i++){
-                this.Device.push(keys[i].split('Node-')[1])
+                this.Device[i] = keys[i].split('Node-')[1];
             }
             this.Device = this.Device.sort((a,b)=>{
                 return a - b;
             });
+            for(let i = 0; i < this.Device.length;i++){
+                onValue(child(refAllDevice,`/Node-${this.Device[i]}/NDoC`),snapshot=>{
+                    if(snapshot.exists()){
+                        this.NDoC[i] = snapshot.val();
+                        this.onlineCheck();
+                    }
+                })
+            }
+            onValue(child(refAllDevice,`/Node-${this.Device[this.SelectDevice]}/status`),snapshot=>{
+                if(snapshot.val() == 0 && this.queuestatus == 1){
+                    this.queue_h = this.Device[this.SelectDevice];
+                    this.queuestatus = 2;
+                }
+            })
         })
+        const refDoC = ref(database,'DoC');
+        onValue(refDoC,snapshot=>{
+            this.DoC = snapshot.val();
+            this.onlineCheck();
+        })
+        this.OnlineDevice = this.OnlineDevice.filter(Number);
+        setInterval(()=>{
+            const DoC = Math.floor(Math.random() * 100);
+            set(ref(database,'DoC'),DoC);
+        },30000);
     },
     methods: {
         sendqueue(e){
             e.stopPropagation();
-            const DevicePath = "Device/Node-" + this.Device[this.SelectDevice];
+            const DevicePath = `Device/Node-${this.Device[this.SelectDevice]}`;
             set(ref(database,DevicePath),{
                 status: 1
             })
+            this.queuestatus = 1;
+        },
+        randomDoC(){
+            console.log('ran');
+            const DoC = Math.floor(Math.random() * 100);
+            set(ref(database,'DoC'),DoC);
         },
         onlineCheck(){
-            
+            setTimeout((()=>{
+                this.OnlineDevice = [];
+                for(let i= 0;i<this.Device.length;i++){
+                    if(Number(this.DoC) == Number(this.NDoC[i])){
+                        this.OnlineDevice[i] = Number(this.Device[i]);
+                    }
+                }
+                this.OnlineDevice = this.OnlineDevice.filter(Number);
+            }),100);
+            // this.NDoC = this.NDoC.filter(Number);
+        },
+        empty(arr){
+            arr.lenght = 0;
         }
     },
 }
+
 </script>
 
 <style scoped>

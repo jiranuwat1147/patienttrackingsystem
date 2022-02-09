@@ -1,12 +1,12 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, onValue, set} from 'firebase/database';
+import { getDatabase, ref, onValue, set,get,child} from 'firebase/database';
 import {getAuth,
         FacebookAuthProvider,
         GoogleAuthProvider,
         EmailAuthProvider,
         onAuthStateChanged,
         signOut,
-        getRedirectResult
+        getRedirectResult,
         } from 'firebase/auth'
 import * as firebaseui from "firebaseui"
 const firebaseConfig = {
@@ -36,5 +36,7 @@ export {
   EmailAuthProvider,
   onAuthStateChanged,
   signOut,
-  getRedirectResult
+  getRedirectResult,
+  get,
+  child
 }
