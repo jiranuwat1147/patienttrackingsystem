@@ -34,7 +34,7 @@
                     <div class="w-100">
                         <label for="" class="form-label">สถานะการเรียกคิว</label>
                         <div v-if="queuestatus == 0" class="alert alert-secondary">ไม่มีสถานะการเรียกคิว</div>
-                        <div v-else-if="queuestatus == 1" class="alert alert-info">เรียกคิวที่ {{Device[SelectDevice]}}</div>
+                        <div v-else-if="queuestatus == 1" class="alert alert-info">กำลังเรียกคิวที่ {{queue}} </div>
                         <div v-else-if="queuestatus == 2" class="alert alert-success">คิวที่ {{queue_h}} ตอบรับ</div>
                     </div>
                 </div>
@@ -55,6 +55,7 @@ export default {
             user:null,
             // SelectQueue:this.Device[this.SelectDrive],
             queuestatus:0,
+            queue:0,
             queue_h:0,
             SelectDevice:0,
             Device:[],
@@ -116,10 +117,10 @@ export default {
             set(ref(database,DevicePath),{
                 status: 1
             })
+            this.queue = this.Device[this.SelectDevice];
             this.queuestatus = 1;
         },
         randomDoC(){
-            console.log('ran');
             const DoC = Math.floor(Math.random() * 100);
             set(ref(database,'DoC'),DoC);
         },
@@ -132,7 +133,7 @@ export default {
                     }
                 }
                 this.OnlineDevice = this.OnlineDevice.filter(Number);
-            }),100);
+            }),1000);
             // this.NDoC = this.NDoC.filter(Number);
         },
         empty(arr){

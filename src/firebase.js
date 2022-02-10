@@ -6,7 +6,7 @@ import {getAuth,
         EmailAuthProvider,
         onAuthStateChanged,
         signOut,
-        getRedirectResult,
+        getRedirectResult
         } from 'firebase/auth'
 import * as firebaseui from "firebaseui"
 const firebaseConfig = {
@@ -38,5 +38,5 @@ export {
   signOut,
   getRedirectResult,
   get,
-  child
+  child,
 }

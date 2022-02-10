@@ -37,7 +37,7 @@ export default {
     SignOut(e) {
       e.stopPropagation();
       signOut(Auth);
-      this.$router.push("/login");
+      this.$router.push("/login").catch(()=>{});
     },
   },
 };

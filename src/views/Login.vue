@@ -32,7 +32,14 @@ export default {
             signInOptions: [
                 FacebookAuthProvider.PROVIDER_ID,
                 GoogleAuthProvider.PROVIDER_ID,
-                EmailAuthProvider.PROVIDER_ID
+                {
+                    provider:EmailAuthProvider.PROVIDER_ID,
+                    disableSignUp:{
+                        status: true,
+                        adminEmail: "jiranuwat.k@outlook.com",
+                        helpLink: (undefined),
+                    }
+                }
             ],
             // signInFlow:'popup'
         }
